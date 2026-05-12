@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="da">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0b57d0" />
+    <meta name="description" content="Vinduespudser personlig PWA" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/assets/icons/icon-192.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/styles.css" />
+    <title>Vinduespudser PWA</title>
+  </head>
+  <body>
+    <header>
+      <h1>Vinduespudser PWA</h1>
+      <div class="header-actions">
+        <button id="installBtn" hidden>Installér app</button>
+        <button id="notifyBtn">Aktivér påmindelser</button>
+      </div>
+    </header>
+
+    <main>
+      <section class="card" id="loginSection">
+        <h2>Login (personlig)</h2>
+        <form id="loginForm">
+          <label>Navn <input id="name" required /></label>
+          <label>Email <input id="email" type="email" required /></label>
+          <label>Rolle
+            <select id="role">
+              <option value="owner">Ejer</option>
+              <option value="worker">Medarbejder</option>
+            </select>
+          </label>
+          <button type="submit">Gem profil</button>
+        </form>
+      </section>
+
+      <section class="card">
+        <h2>Dashboard</h2>
+        <div class="grid" id="stats"></div>
+      </section>
+
+      <section class="card">
+        <h2>Kunder</h2>
+        <form id="customerForm" class="inline-form">
+          <input id="customerName" placeholder="Navn" required />
+          <input id="customerAddress" placeholder="Adresse" required />
+          <input id="customerPhone" placeholder="Telefon" />
+          <button type="submit">Tilføj kunde</button>
+        </form>
+        <ul id="customerList"></ul>
+      </section>
+
+      <section class="card">
+        <h2>Opgaver / Ordrer</h2>
+        <form id="taskForm" class="inline-form">
+          <select id="taskCustomer" required></select>
+          <input id="taskTitle" placeholder="Titel" required />
+          <input id="taskDate" type="date" required />
+          <select id="taskStatus">
+            <option value="new">Ny</option>
+            <option value="in_progress">Igang</option>
+            <option value="done">Færdig</option>
+          </select>
+          <input id="taskNote" placeholder="Note" />
+          <input id="taskAttachment" type="file" accept="image/*" />
+          <button type="submit">Tilføj opgave</button>
+        </form>
+
+        <div class="toolbar">
+          <input id="taskSearch" placeholder="Søg titel/note" />
+          <select id="taskFilterStatus">
+            <option value="all">Alle statuser</option>
+            <option value="new">Ny</option>
+            <option value="in_progress">Igang</option>
+            <option value="done">Færdig</option>
+          </select>
+          <select id="taskSort">
+            <option value="dateAsc">Dato stigende</option>
+            <option value="dateDesc">Dato faldende</option>
+          </select>
+          <button id="exportCsvBtn" type="button">Eksportér CSV</button>
+        </div>
+
+        <div id="calendar"></div>
+        <ul id="taskList"></ul>
+      </section>
+
+      <section class="card" id="syncSection">
+        <h2>Google Sheets sync</h2>
+        <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
+        <label>Apps Script URL <input id="sheetUrl" placeholder="https://script.google.com/..." /></label>
+        <label>Access token (valgfri) <input id="sheetToken" placeholder="token" /></label>
+        <div class="header-actions">
+          <button id="saveSyncSettings">Gem sync-indstillinger</button>
+          <button id="syncNow">Synkronisér nu</button>
+        </div>
+        <p id="syncStatus"></p>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

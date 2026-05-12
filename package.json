@@ -1,0 +1,15 @@
+{
+  "name": "vinduespudser",
+  "version": "1.0.0",
+  "description": "Personal PWA for window cleaning workflow",
+  "main": "app.js",
+  "scripts": {
+    "serve": "python3 -m http.server 4173"
+  },
+  "keywords": [
+    "pwa",
+    "vinduespudser"
+  ],
+  "author": "",
+  "license": "MIT"
+}
