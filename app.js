@@ -192,7 +192,10 @@ async function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
-    reader.onerror = () => reject(new Error("Kunne ikke læse fil"));
+    reader.onerror = () => {
+      const details = reader.error?.message || "ukendt fejl";
+      reject(new Error(`Kunne ikke læse fil: ${details}`));
+    };
     reader.readAsDataURL(file);
   });
 }
@@ -210,7 +213,9 @@ async function sendToSheet(payload) {
       payload,
     }),
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${res.statusText} for ${state.settings.sheetUrl}`);
+  }
   return true;
 }
 

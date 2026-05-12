@@ -21,7 +21,6 @@ En personlig, installérbar PWA til at håndtere kunder, opgaver/ordrer og planl
 ## Kør lokalt
 
 ```bash
-cd /home/runner/work/Vinduespudser/Vinduespudser
 npm run serve
 ```
 
