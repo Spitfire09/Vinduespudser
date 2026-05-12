@@ -19,102 +19,141 @@
       </div>
     </header>
 
+    <nav class="tabs">
+      <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="invoices">Fakturaer</button>
+      <button class="tab-btn" data-tab="settings">Opsætning</button>
+    </nav>
+
     <main>
-      <section class="card" id="loginSection">
-        <h2>Login (personlig)</h2>
-        <form id="loginForm">
-          <label>Navn <input id="name" required /></label>
-          <label>Email <input id="email" type="email" required /></label>
-          <button type="submit">Gem profil</button>
-        </form>
-      </section>
+      <!-- Dashboard Tab -->
+      <div class="tab-content active" data-tab="dashboard">
+        <section class="card">
+          <h2>Oversigt</h2>
+          <div class="grid" id="stats"></div>
+        </section>
 
-      <section class="card">
-        <h2>Dashboard</h2>
-        <div class="grid" id="stats"></div>
-      </section>
+        <section class="card">
+          <h2>Dagens opgaver</h2>
+          <ul id="todayTaskList"></ul>
+        </section>
 
-      <section class="card">
-        <h2>Kunder</h2>
-        <form id="customerForm" class="inline-form">
-          <input id="customerName" placeholder="Navn" required />
-          <input id="customerAddress" placeholder="Adresse" required />
-          <input id="customerPhone" placeholder="Telefon" />
-          <input id="customerEmail" type="email" placeholder="Email" />
-          <button type="submit">Tilføj kunde</button>
-        </form>
-        <ul id="customerList"></ul>
-      </section>
+        <section class="card">
+          <h2>Kunder</h2>
+          <form id="customerForm" class="inline-form">
+            <input id="customerName" placeholder="Navn" required />
+            <input id="customerAddress" placeholder="Adresse" required />
+            <input id="customerPhone" placeholder="Telefon" />
+            <input id="customerEmail" type="email" placeholder="Email" />
+            <button type="submit">Tilføj kunde</button>
+          </form>
+          <ul id="customerList"></ul>
+        </section>
 
-      <section class="card">
-        <h2>Opgaver / Ordrer</h2>
-        <form id="taskForm" class="inline-form">
-          <select id="taskCustomer" required></select>
-          <input id="taskTitle" placeholder="Titel" required />
-          <input id="taskDate" type="date" required />
-          <select id="taskStatus">
-            <option value="new">Ny</option>
-            <option value="in_progress">Igang</option>
-            <option value="done">Færdig</option>
-          </select>
-          <select id="taskInterval">
-            <option value="">Ingen gentagelse</option>
-            <option value="weekly">Ugentlig</option>
-            <option value="monthly">Månedlig</option>
-            <option value="quarterly">Kvartalsvis</option>
-          </select>
-          <input id="taskNote" placeholder="Note" />
-          <input id="taskAttachment" type="file" accept="image/*" />
-          <button type="submit">Tilføj opgave</button>
-        </form>
+        <section class="card">
+          <h2>Opgaver / Ordrer</h2>
+          <form id="taskForm" class="inline-form">
+            <select id="taskCustomer" required></select>
+            <input id="taskTitle" placeholder="Titel" required />
+            <input id="taskDate" type="date" required />
+            <select id="taskStatus">
+              <option value="new">Ny</option>
+              <option value="in_progress">Igang</option>
+              <option value="done">Færdig</option>
+            </select>
+            <select id="taskInterval">
+              <option value="">Ingen gentagelse</option>
+              <option value="weekly">Ugentlig</option>
+              <option value="monthly">Månedlig</option>
+              <option value="quarterly">Kvartalsvis</option>
+            </select>
+            <input id="taskNote" placeholder="Note" />
+            <input id="taskAttachment" type="file" accept="image/*" />
+            <button type="submit">Tilføj opgave</button>
+          </form>
 
-        <div class="toolbar">
-          <input id="taskSearch" placeholder="Søg titel/note" />
-          <select id="taskFilterStatus">
-            <option value="all">Alle statuser</option>
-            <option value="new">Ny</option>
-            <option value="in_progress">Igang</option>
-            <option value="done">Færdig</option>
-          </select>
-          <select id="taskSort">
-            <option value="dateAsc">Dato stigende</option>
-            <option value="dateDesc">Dato faldende</option>
-          </select>
-          <button id="exportCsvBtn" type="button">Eksportér CSV</button>
-          <button id="toggleRouteBtn" type="button">Vis ruteliste</button>
-        </div>
+          <div class="toolbar">
+            <input id="taskSearch" placeholder="Søg titel/note" />
+            <select id="taskFilterStatus">
+              <option value="all">Alle statuser</option>
+              <option value="new">Ny</option>
+              <option value="in_progress">Igang</option>
+              <option value="done">Færdig</option>
+            </select>
+            <select id="taskSort">
+              <option value="dateAsc">Dato stigende</option>
+              <option value="dateDesc">Dato faldende</option>
+            </select>
+            <button id="exportCsvBtn" type="button">Eksportér CSV</button>
+            <button id="toggleRouteBtn" type="button">Vis ruteliste</button>
+          </div>
 
-        <div id="routeSection" hidden>
-          <div id="routeView"></div>
-        </div>
+          <div id="routeSection" hidden>
+            <div id="routeView"></div>
+          </div>
 
-        <div id="calendar"></div>
-        <ul id="taskList"></ul>
-      </section>
+          <div id="calendar"></div>
+          <ul id="taskList"></ul>
+        </section>
+      </div>
 
-      <section class="card" id="invoiceSection">
-        <h2>Fakturaer</h2>
-        <form id="invoiceForm" class="inline-form">
-          <select id="invoiceCustomer" required></select>
-          <textarea id="invoiceText" placeholder="Beskrivelse" required rows="2"></textarea>
-          <input id="invoiceAmount" type="number" min="0" step="0.01" placeholder="Beløb (kr)" required />
-          <input id="invoiceDate" type="date" required />
-          <button type="submit">Generér &amp; send faktura</button>
-        </form>
-        <ul id="invoiceList"></ul>
-      </section>
+      <!-- Invoices Tab -->
+      <div class="tab-content" data-tab="invoices">
+        <section class="card">
+          <h2>Månedsoversigt</h2>
+          <div class="grid" id="monthStats"></div>
+        </section>
 
-      <section class="card" id="syncSection">
-        <h2>Google Sheets sync</h2>
-        <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
-        <label>Apps Script URL <input id="sheetUrl" placeholder="https://script.google.com/..." /></label>
-        <label>Access token (valgfri) <input id="sheetToken" placeholder="token" /></label>
-        <div class="header-actions">
-          <button id="saveSyncSettings">Gem sync-indstillinger</button>
-          <button id="syncNow">Synkronisér nu</button>
-        </div>
-        <p id="syncStatus"></p>
-      </section>
+        <section class="card" id="invoiceSection">
+          <h2>Opret faktura</h2>
+          <form id="invoiceForm" class="inline-form">
+            <select id="invoiceCustomer" required></select>
+            <textarea id="invoiceText" placeholder="Beskrivelse" required rows="2"></textarea>
+            <input id="invoiceAmount" type="number" min="0" step="0.01" placeholder="Beløb (kr)" required />
+            <input id="invoiceDate" type="date" required />
+            <button type="submit">Generér &amp; send faktura</button>
+          </form>
+        </section>
+
+        <section class="card">
+          <h2>Fakturahistorik</h2>
+          <ul id="invoiceList"></ul>
+        </section>
+      </div>
+
+      <!-- Settings Tab -->
+      <div class="tab-content" data-tab="settings">
+        <section class="card">
+          <h2>Firma information</h2>
+          <form id="companyForm" class="settings-form">
+            <label>Firmanavn <input id="companyName" required /></label>
+            <label>Adresse <input id="companyAddress" required /></label>
+            <label>CVR nummer <input id="companyCvr" required /></label>
+            <label>Email <input id="companyEmail" type="email" required /></label>
+            <label>Telefon <input id="companyPhone" required /></label>
+            <label>MobilePay nummer <input id="companyMobilePay" /></label>
+            <label>Kontonummer <input id="companyBankAccount" /></label>
+            <button type="submit">Gem firma information</button>
+          </form>
+        </section>
+
+        <section class="card" id="syncSection">
+          <h2>Google Sheets opsætning</h2>
+          <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
+          <form id="syncForm" class="settings-form">
+            <label>Apps Script URL <input id="sheetUrl" placeholder="https://script.google.com/..." /></label>
+            <label>
+              <span>Access token (valgfri)</span>
+              <input id="sheetToken" placeholder="token" type="password" aria-label="Access token - valgfrit felt" />
+            </label>
+            <div class="header-actions">
+              <button type="submit">Gem opsætning</button>
+              <button id="testSyncBtn" type="button">Test adgang</button>
+            </div>
+          </form>
+          <p id="syncStatus"></p>
+        </section>
+      </div>
     </main>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb" crossorigin="anonymous"></script>

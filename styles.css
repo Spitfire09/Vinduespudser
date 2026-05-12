@@ -22,6 +22,58 @@ header {
   justify-content: space-between;
   align-items: center;
   padding: 0.75rem 1rem;
+  z-index: 100;
+}
+.tabs {
+  position: sticky;
+  top: 57px;
+  background: var(--card);
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  gap: 0;
+  padding: 0 1rem;
+  z-index: 99;
+}
+.tab-btn {
+  background: transparent;
+  color: var(--muted);
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 1rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.tab-btn:hover {
+  background: rgba(11, 87, 208, 0.05);
+  color: var(--accent);
+}
+.tab-btn.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  background: transparent;
+}
+.tab-content {
+  display: none;
+}
+.tab-content.active {
+  display: grid;
+  gap: 1rem;
+}
+.settings-form {
+  display: grid;
+  gap: 0.75rem;
+}
+.settings-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.settings-form button {
+  justify-self: start;
+  margin-top: 0.5rem;
 }
 main {
   max-width: 1000px;

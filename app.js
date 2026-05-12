@@ -1,5 +1,6 @@
 const STORAGE_KEY = "vinduespudser-data-v1";
 const SYNC_QUEUE_KEY = "vinduespudser-sync-queue-v1";
+const DEFAULT_COMPANY_NAME = "Vinduespudser";
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
 const syncStatus = document.getElementById("syncStatus");
@@ -7,7 +8,15 @@ const syncStatus = document.getElementById("syncStatus");
 let deferredPrompt;
 
 const defaultState = {
-  profile: { name: "", email: "" },
+  company: { 
+    name: "", 
+    address: "", 
+    cvr: "", 
+    email: "", 
+    phone: "", 
+    mobilePay: "", 
+    bankAccount: "" 
+  },
   customers: [],
   tasks: [],
   invoices: [],
@@ -135,6 +144,50 @@ function renderStats() {
     <div class="stat"><strong>${state.tasks.length}</strong><div class="small">Opgaver</div></div>
     <div class="stat"><strong>${todayTasks}</strong><div class="small">I dag</div></div>
     <div class="stat"><strong>${done}</strong><div class="small">Færdige</div></div>
+  `;
+}
+
+function renderTodayTasks() {
+  const list = byId("todayTaskList");
+  if (!list) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const todayTasks = state.tasks.filter((t) => t.date === today);
+  
+  if (todayTasks.length === 0) {
+    list.innerHTML = "<li class='small'>Ingen opgaver for i dag.</li>";
+    return;
+  }
+
+  list.innerHTML = "";
+  for (const t of todayTasks) {
+    const customer = state.customers.find((c) => c.id === t.customerId)?.name || "Ukendt kunde";
+    const li = document.createElement("li");
+    const statusBadge = t.status === "done" ? "✓" : t.status === "in_progress" ? "→" : "•";
+    li.innerHTML = `
+      <strong>${statusBadge} ${t.title}</strong>
+      <div class="small">${customer} · ${t.status}</div>
+      ${t.note ? `<div class="small">${t.note}</div>` : ""}
+    `;
+    list.appendChild(li);
+  }
+}
+
+function renderMonthStats() {
+  const monthStatsEl = byId("monthStats");
+  if (!monthStatsEl) return;
+  
+  const now = new Date();
+  const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+  
+  const monthInvoices = state.invoices.filter(inv => inv.date.startsWith(currentMonth));
+  const monthRevenue = monthInvoices.reduce((sum, inv) => sum + inv.amount, 0);
+  const monthTasks = state.tasks.filter(t => t.date.startsWith(currentMonth) && t.status === "done").length;
+  
+  monthStatsEl.innerHTML = `
+    <div class="stat"><strong>${monthInvoices.length}</strong><div class="small">Fakturaer denne måned</div></div>
+    <div class="stat"><strong>${formatAmount(monthRevenue)} kr.</strong><div class="small">Omsætning</div></div>
+    <div class="stat"><strong>${monthTasks}</strong><div class="small">Færdige opgaver</div></div>
+    <div class="stat"><strong>${state.invoices.length}</strong><div class="small">Fakturaer i alt</div></div>
   `;
 }
 
@@ -297,7 +350,7 @@ async function fileToDataUrl(file) {
 
 async function sendToSheet(payload) {
   if (!state.settings.sheetUrl) {
-    syncStatus.textContent = "Ingen Sheet URL sat.";
+    if (syncStatus) syncStatus.textContent = "Ingen Sheet URL sat.";
     return false;
   }
   const res = await fetch(state.settings.sheetUrl, {
@@ -318,18 +371,19 @@ async function autoSync() {
   if (!queue.length) return;
   try {
     const ok = await sendToSheet({
-      profile: state.profile,
+      company: state.company,
       customers: state.customers,
       tasks: state.tasks,
+      invoices: state.invoices,
       queue,
       syncedAt: new Date().toISOString(),
     });
     if (ok) {
       clearQueue();
-      syncStatus.textContent = `Synkroniseret (${new Date().toLocaleTimeString()})`;
+      if (syncStatus) syncStatus.textContent = `✓ Synkroniseret (${new Date().toLocaleTimeString()})`;
     }
   } catch {
-    syncStatus.textContent = "Sync fejlede, kø beholdes.";
+    if (syncStatus) syncStatus.textContent = "✗ Sync fejlede, kø beholdes.";
   }
 }
 
@@ -356,6 +410,32 @@ function generateInvoicePdf(customer, invoiceNumber, description, amount, date) 
   doc.setFontSize(24);
   doc.setFont(undefined, "bold");
   doc.text("FAKTURA", 105, 25, { align: "center" });
+
+  // Company info (from right)
+  doc.setFontSize(9);
+  doc.setFont(undefined, "normal");
+  let companyY = 20;
+  if (state.company.name) {
+    doc.setFont(undefined, "bold");
+    doc.text(state.company.name, RIGHT, companyY, { align: "right" });
+    companyY += 5;
+    doc.setFont(undefined, "normal");
+  }
+  if (state.company.address) {
+    doc.text(state.company.address, RIGHT, companyY, { align: "right" });
+    companyY += 5;
+  }
+  if (state.company.cvr) {
+    doc.text(`CVR: ${state.company.cvr}`, RIGHT, companyY, { align: "right" });
+    companyY += 5;
+  }
+  if (state.company.phone) {
+    doc.text(`Tlf: ${state.company.phone}`, RIGHT, companyY, { align: "right" });
+    companyY += 5;
+  }
+  if (state.company.email) {
+    doc.text(state.company.email, RIGHT, companyY, { align: "right" });
+  }
 
   doc.setFontSize(10);
   doc.setFont(undefined, "normal");
@@ -393,6 +473,18 @@ function generateInvoicePdf(customer, invoiceNumber, description, amount, date) 
   doc.text("Total:", 130, totalY);
   doc.text(`${formatAmount(amount)} kr.`, RIGHT, totalY, { align: "right" });
 
+  // Payment info at bottom
+  doc.setFontSize(9);
+  doc.setFont(undefined, "normal");
+  let payY = totalY + 20;
+  if (state.company.bankAccount) {
+    doc.text(`Kontonummer: ${state.company.bankAccount}`, LEFT, payY);
+    payY += 5;
+  }
+  if (state.company.mobilePay) {
+    doc.text(`MobilePay: ${state.company.mobilePay}`, LEFT, payY);
+  }
+
   return doc;
 }
 
@@ -401,11 +493,15 @@ function downloadInvoicePdf(doc, invoiceNumber) {
 }
 
 function openInvoiceEmail(customer, invoiceNumber, amount, date) {
+  const companyName = state.company.name || DEFAULT_COMPANY_NAME;
   const subject = encodeURIComponent(`Faktura ${invoiceNumber} – ${date}`);
   const body = encodeURIComponent(
-    `Kære ${customer.name},\n\nVedhæftet finder du faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.\n\nMed venlig hilsen`
+    `Kære ${customer.name},\n\nVedhæftet finder du faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.\n\nMed venlig hilsen\n${companyName}`
   );
-  window.open(`mailto:${customer.email || ""}?subject=${subject}&body=${body}`);
+  const mailto = `mailto:${customer.email || ""}?subject=${subject}&body=${body}`;
+  // Using window.location.href instead of window.open() for better mobile compatibility
+  // and to avoid popup blockers that might prevent the email client from opening
+  window.location.href = mailto;
 }
 
 function renderInvoices() {
@@ -459,29 +555,65 @@ function renderInvoices() {
 
 function renderAll() {
   renderStats();
+  renderTodayTasks();
+  renderMonthStats();
   renderCustomers();
   renderTasks();
   renderCalendar();
   renderRouteView();
   renderInvoices();
-  byId("name").value = state.profile.name || "";
-  byId("email").value = state.profile.email || "";
+  
+  // Company info
+  byId("companyName").value = state.company.name || "";
+  byId("companyAddress").value = state.company.address || "";
+  byId("companyCvr").value = state.company.cvr || "";
+  byId("companyEmail").value = state.company.email || "";
+  byId("companyPhone").value = state.company.phone || "";
+  byId("companyMobilePay").value = state.company.mobilePay || "";
+  byId("companyBankAccount").value = state.company.bankAccount || "";
+  
+  // Sync settings
   byId("sheetUrl").value = state.settings.sheetUrl || "";
   byId("sheetToken").value = state.settings.sheetToken || "";
+  
   if (!byId("invoiceDate").value) {
     byId("invoiceDate").value = new Date().toISOString().slice(0, 10);
   }
 }
 
-byId("loginForm").addEventListener("submit", (e) => {
+// Tab navigation
+document.querySelectorAll(".tab-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const tab = btn.dataset.tab;
+    
+    // Update buttons
+    document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    
+    // Update content
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    const targetContent = document.querySelector(`.tab-content[data-tab="${tab}"]`);
+    if (targetContent) {
+      targetContent.classList.add("active");
+    }
+  });
+});
+
+// Company form
+byId("companyForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  state.profile = {
-    name: byId("name").value.trim(),
-    email: byId("email").value.trim(),
+  state.company = {
+    name: byId("companyName").value.trim(),
+    address: byId("companyAddress").value.trim(),
+    cvr: byId("companyCvr").value.trim(),
+    email: byId("companyEmail").value.trim(),
+    phone: byId("companyPhone").value.trim(),
+    mobilePay: byId("companyMobilePay").value.trim(),
+    bankAccount: byId("companyBankAccount").value.trim(),
   };
   saveState();
-  queueSync("profile_update", state.profile);
-  renderAll();
+  queueSync("company_update", state.company);
+  alert("Firma information gemt!");
   autoSync();
 });
 
@@ -566,17 +698,49 @@ byId("toggleRouteBtn").addEventListener("click", () => {
   byId("toggleRouteBtn").textContent = hidden ? "Skjul ruteliste" : "Vis ruteliste";
 });
 
-byId("saveSyncSettings").addEventListener("click", () => {
+// Sync form
+byId("syncForm").addEventListener("submit", (e) => {
+  e.preventDefault();
   state.settings.sheetUrl = byId("sheetUrl").value.trim();
   state.settings.sheetToken = byId("sheetToken").value.trim();
   saveState();
   queueSync("settings_update", { ...state.settings, sheetToken: "***" });
-  syncStatus.textContent = "Sync-indstillinger gemt.";
+  syncStatus.textContent = "✓ Sync-indstillinger gemt.";
+  autoSync();
 });
 
-byId("syncNow").addEventListener("click", async () => {
-  queueSync("manual_sync", { at: new Date().toISOString() });
-  await autoSync();
+byId("testSyncBtn").addEventListener("click", async () => {
+  if (!state.settings.sheetUrl) {
+    syncStatus.textContent = "⚠ Angiv venligst en Apps Script URL først.";
+    return;
+  }
+  
+  syncStatus.textContent = "⏳ Tester forbindelse...";
+  
+  try {
+    const testPayload = {
+      test: true,
+      timestamp: new Date().toISOString(),
+      company: state.company,
+    };
+    
+    const res = await fetch(state.settings.sheetUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        token: state.settings.sheetToken || undefined,
+        payload: testPayload,
+      }),
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    syncStatus.textContent = "✓ Forbindelse OK! Google Sheets er konfigureret korrekt.";
+  } catch (err) {
+    syncStatus.textContent = `✗ Fejl: ${err.message}`;
+  }
 });
 
 notifyBtn.addEventListener("click", async () => {
