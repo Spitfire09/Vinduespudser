@@ -1,9 +1,10 @@
 import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
+import { randomUUID } from "node:crypto";
 import path from "node:path";
 
 const rootDir = process.cwd();
 const distDir = path.join(rootDir, "dist");
-const buildId = (process.env.GITHUB_SHA || new Date().toISOString().replace(/[^0-9]/g, "")).slice(0, 12);
+const buildId = (process.env.GITHUB_SHA || randomUUID().replace(/-/g, "")).slice(0, 12);
 
 async function build() {
   await rm(distDir, { recursive: true, force: true });
