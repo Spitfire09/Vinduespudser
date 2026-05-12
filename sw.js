@@ -23,7 +23,11 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") {
-    event.respondWith(fetch(event.request));
+    event.respondWith(
+      fetch(event.request).catch(
+        () => new Response("Offline: request could not be completed.", { status: 503 })
+      )
+    );
     return;
   }
   event.respondWith(
