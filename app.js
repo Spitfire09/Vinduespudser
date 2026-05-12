@@ -193,7 +193,7 @@ async function fileToDataUrl(file) {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => {
-      const details = reader.error?.message || "ukendt fejl";
+      const details = reader.error?.message || "ukendte fejl";
       reject(new Error(`Kunne ikke læse fil: ${details}`));
     };
     reader.readAsDataURL(file);
