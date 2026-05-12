@@ -10,6 +10,8 @@ const defaultState = {
   profile: { name: "", email: "" },
   customers: [],
   tasks: [],
+  invoices: [],
+  nextInvoiceNumber: 1,
   settings: { sheetUrl: "", sheetToken: "" },
 };
 
@@ -67,17 +69,19 @@ function renderCustomers() {
   list.innerHTML = "";
   for (const c of state.customers) {
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${c.name}</strong><div class="small">${c.address} · ${c.phone || "-"}</div>`;
+    li.innerHTML = `<strong>${c.name}</strong><div class="small">${c.address} · ${c.phone || "-"} · ${c.email || "-"}</div>`;
     list.appendChild(li);
   }
 
-  const select = byId("taskCustomer");
-  select.innerHTML = `<option value="">Vælg kunde</option>`;
-  for (const c of state.customers) {
-    const opt = document.createElement("option");
-    opt.value = c.id;
-    opt.textContent = c.name;
-    select.appendChild(opt);
+  const selectors = [byId("taskCustomer"), byId("invoiceCustomer")];
+  for (const select of selectors) {
+    select.innerHTML = `<option value="">Vælg kunde</option>`;
+    for (const c of state.customers) {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.name;
+      select.appendChild(opt);
+    }
   }
 }
 
@@ -188,6 +192,154 @@ function exportCsv() {
   a.remove();
 }
 
+function generateInvoicePdf(invoice, customer) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const margin = 20;
+  const pageWidth = 210;
+  let y = margin;
+
+  doc.setFontSize(24);
+  doc.setFont("helvetica", "bold");
+  doc.text("FAKTURA", margin, y);
+
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  if (state.profile.name) {
+    doc.text(state.profile.name, pageWidth - margin, y, { align: "right" });
+    y += 5;
+  }
+  if (state.profile.email) {
+    doc.text(state.profile.email, pageWidth - margin, y, { align: "right" });
+  }
+
+  y = margin + 20;
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "bold");
+  doc.text("Til:", margin, y);
+  doc.setFont("helvetica", "normal");
+  y += 6;
+  doc.text(customer.name, margin, y);
+  y += 5;
+  if (customer.address) {
+    doc.text(customer.address, margin, y);
+    y += 5;
+  }
+  if (customer.email) {
+    doc.text(customer.email, margin, y);
+    y += 5;
+  }
+
+  y += 5;
+  doc.setFontSize(10);
+  doc.text(`Fakturanummer: ${invoice.number}`, margin, y);
+  doc.text(`Fakturadato: ${invoice.date}`, pageWidth - margin, y, { align: "right" });
+  y += 5;
+  doc.text(`Forfaldsdato: ${invoice.dueDate}`, pageWidth - margin, y, { align: "right" });
+
+  y += 12;
+  doc.setFont("helvetica", "bold");
+  doc.text("Beskrivelse", margin, y);
+  doc.text("Beløb", pageWidth - margin, y, { align: "right" });
+  y += 2;
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
+
+  doc.setFont("helvetica", "normal");
+  const descLines = doc.splitTextToSize(invoice.description, 140);
+  doc.text(descLines, margin, y);
+  doc.text(`${invoice.amount.toFixed(2)} kr.`, pageWidth - margin, y, { align: "right" });
+  y += descLines.length * 5 + 6;
+
+  doc.line(margin, y, pageWidth - margin, y);
+  y += 6;
+
+  const vat = invoice.amount * 0.25;
+  const total = invoice.amount + vat;
+
+  doc.text("Subtotal:", 150, y);
+  doc.text(`${invoice.amount.toFixed(2)} kr.`, pageWidth - margin, y, { align: "right" });
+  y += 6;
+  doc.text("Moms (25%):", 150, y);
+  doc.text(`${vat.toFixed(2)} kr.`, pageWidth - margin, y, { align: "right" });
+  y += 6;
+  doc.setFont("helvetica", "bold");
+  doc.text("I alt:", 150, y);
+  doc.text(`${total.toFixed(2)} kr.`, pageWidth - margin, y, { align: "right" });
+
+  y += 14;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text("Betalingsbetingelser: 30 dage netto", margin, y);
+
+  return doc;
+}
+
+function addDays(dateStr, days) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + days));
+  return date.toISOString().slice(0, 10);
+}
+
+function renderInvoices() {
+  const list = byId("invoiceList");
+  list.innerHTML = "";
+  for (const inv of [...state.invoices].reverse()) {
+    const customer = state.customers.find((c) => c.id === inv.customerId);
+    const customerName = customer?.name || "Ukendt kunde";
+    const vat = inv.amount * 0.25;
+    const total = inv.amount + vat;
+    const li = document.createElement("li");
+    li.innerHTML = `
+      <strong>${inv.number}</strong>
+      <div class="small">${customerName} · ${inv.date} · I alt: ${total.toFixed(2)} kr.</div>
+      <div>${inv.description}</div>
+    `;
+
+    const row = document.createElement("div");
+    row.className = "header-actions";
+
+    const downloadBtn = document.createElement("button");
+    downloadBtn.type = "button";
+    downloadBtn.textContent = "Download PDF";
+    downloadBtn.addEventListener("click", () => {
+      if (!customer) { alert("Kunden blev ikke fundet."); return; }
+      const doc = generateInvoicePdf(inv, customer);
+      doc.save(`${inv.number}.pdf`);
+    });
+
+    const emailBtn = document.createElement("button");
+    emailBtn.type = "button";
+    emailBtn.textContent = "Send email";
+    emailBtn.addEventListener("click", () => {
+      if (!customer) { alert("Kunden blev ikke fundet."); return; }
+      sendInvoiceByEmail(inv, customer);
+    });
+
+    row.append(downloadBtn, emailBtn);
+    li.appendChild(row);
+    list.appendChild(li);
+  }
+}
+
+function sendInvoiceByEmail(invoice, customer) {
+  if (!customer.email) {
+    alert("Kunden har ingen email-adresse tilknyttet.");
+    return;
+  }
+  const vat = invoice.amount * 0.25;
+  const total = invoice.amount + vat;
+  const doc = generateInvoicePdf(invoice, customer);
+  doc.save(`${invoice.number}.pdf`);
+
+  const subject = encodeURIComponent(`Faktura ${invoice.number}`);
+  const body = encodeURIComponent(
+    `Kære ${customer.name},\n\nVedhæft venligst den downloadede PDF-fil (${invoice.number}.pdf).\n\nFakturanummer: ${invoice.number}\nDato: ${invoice.date}\nForfalder: ${invoice.dueDate}\n\nBeskrivelse: ${invoice.description}\n\nBeløb ekskl. moms: ${invoice.amount.toFixed(2)} kr.\nMoms (25%): ${vat.toFixed(2)} kr.\nI alt: ${total.toFixed(2)} kr.\n\nMed venlig hilsen\n${state.profile.name || ""}`
+  );
+  window.open(`mailto:${customer.email}?subject=${subject}&body=${body}`, "_self");
+}
+
 async function fileToDataUrl(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -252,6 +404,7 @@ function renderAll() {
   renderCustomers();
   renderTasks();
   renderCalendar();
+  renderInvoices();
   byId("name").value = state.profile.name || "";
   byId("email").value = state.profile.email || "";
   byId("sheetUrl").value = state.settings.sheetUrl || "";
@@ -277,6 +430,7 @@ byId("customerForm").addEventListener("submit", (e) => {
     name: byId("customerName").value.trim(),
     address: byId("customerAddress").value.trim(),
     phone: byId("customerPhone").value.trim(),
+    email: byId("customerEmail").value.trim(),
   };
   state.customers.push(c);
   saveState();
@@ -309,6 +463,41 @@ byId("taskForm").addEventListener("submit", async (e) => {
 ["taskSearch", "taskFilterStatus", "taskSort"].forEach((id) => {
   byId(id).addEventListener("input", renderTasks);
   byId(id).addEventListener("change", renderTasks);
+});
+
+byId("invoiceForm").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (!window.jspdf) {
+    alert("PDF-biblioteket er ikke indlæst. Kontroller din internetforbindelse og prøv igen.");
+    return;
+  }
+  const customerId = byId("invoiceCustomer").value;
+  const customer = state.customers.find((c) => c.id === customerId);
+  if (!customer) { alert("Vælg venligst en kunde."); return; }
+
+  const dateValue = byId("invoiceDate").value;
+  const year = new Date(dateValue).getUTCFullYear();
+  const num = String(state.nextInvoiceNumber).padStart(3, "0");
+  const invoice = {
+    id: uid(),
+    number: `${year}-${num}`,
+    customerId,
+    description: byId("invoiceDescription").value.trim(),
+    amount: parseFloat(byId("invoiceAmount").value),
+    date: dateValue,
+    dueDate: addDays(dateValue, 30),
+  };
+
+  state.invoices.push(invoice);
+  state.nextInvoiceNumber += 1;
+  saveState();
+  queueSync("invoice_create", { ...invoice });
+
+  e.target.reset();
+  renderAll();
+  autoSync();
+
+  sendInvoiceByEmail(invoice, customer);
 });
 
 byId("exportCsvBtn").addEventListener("click", exportCsv);
@@ -356,6 +545,15 @@ installBtn.addEventListener("click", async () => {
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
+
+(function checkJsPdf() {
+  const submitBtn = byId("invoiceForm").querySelector("button[type=submit]");
+  if (!window.jspdf) {
+    submitBtn.disabled = true;
+    submitBtn.title = "PDF-biblioteket er ikke indlæst. Kræver internetforbindelse.";
+    submitBtn.textContent = "PDF ikke tilgængelig";
+  }
+})();
 
 renderAll();
 autoSync();

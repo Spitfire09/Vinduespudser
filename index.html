@@ -40,6 +40,7 @@
           <input id="customerName" placeholder="Navn" required />
           <input id="customerAddress" placeholder="Adresse" required />
           <input id="customerPhone" placeholder="Telefon" />
+          <input id="customerEmail" type="email" placeholder="Email" />
           <button type="submit">Tilføj kunde</button>
         </form>
         <ul id="customerList"></ul>
@@ -80,6 +81,20 @@
         <ul id="taskList"></ul>
       </section>
 
+      <section class="card">
+        <h2>Fakturaer</h2>
+        <form id="invoiceForm" class="inline-form">
+          <select id="invoiceCustomer" required>
+            <option value="">Vælg kunde</option>
+          </select>
+          <input id="invoiceDescription" placeholder="Beskrivelse / ydelse" required />
+          <input id="invoiceAmount" type="number" placeholder="Beløb ekskl. moms (kr.)" min="0" step="0.01" required />
+          <input id="invoiceDate" type="date" required />
+          <button type="submit">Generér faktura &amp; send email</button>
+        </form>
+        <ul id="invoiceList"></ul>
+      </section>
+
       <section class="card" id="syncSection">
         <h2>Google Sheets sync</h2>
         <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
@@ -93,6 +108,7 @@
       </section>
     </main>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" integrity="sha384-OLBgp1GsljhM2TJ+sbHjaiH9txEUvgdDTAzHv2P24donTt6/529l+9Ua0vFImLlb" crossorigin="anonymous"></script>
     <script src="./app.js"></script>
   </body>
 </html>
