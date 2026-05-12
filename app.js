@@ -7,7 +7,7 @@ const syncStatus = document.getElementById("syncStatus");
 let deferredPrompt;
 
 const defaultState = {
-  profile: { name: "", email: "", role: "owner" },
+  profile: { name: "", email: "" },
   customers: [],
   tasks: [],
   settings: { sheetUrl: "", sheetToken: "" },
@@ -263,7 +263,6 @@ byId("loginForm").addEventListener("submit", (e) => {
   state.profile = {
     name: byId("name").value.trim(),
     email: byId("email").value.trim(),
-    role: "owner",
   };
   saveState();
   queueSync("profile_update", state.profile);
