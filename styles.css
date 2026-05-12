@@ -94,6 +94,14 @@ li {
   padding: 0.6rem;
   margin-top: 0.75rem;
 }
+textarea {
+  border: 1px solid #cfd8e3;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  resize: vertical;
+}
 @media (max-width: 720px) {
   .inline-form > * { width: 100%; }
   .toolbar > * { width: 100%; }
