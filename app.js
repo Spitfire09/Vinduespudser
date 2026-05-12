@@ -193,7 +193,7 @@ async function fileToDataUrl(file) {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
     reader.onerror = () => {
-      const details = reader.error?.message || "ukendte fejl";
+      const details = reader.error?.message || "ukendt fejl";
       reject(new Error(`Kunne ikke læse fil: ${details}`));
     };
     reader.readAsDataURL(file);
@@ -213,9 +213,7 @@ async function sendToSheet(payload) {
       payload,
     }),
   });
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText} for ${state.settings.sheetUrl}`);
-  }
+  if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
   return true;
 }
 
