@@ -31,7 +31,7 @@ async function build() {
 try {
   await build();
 } catch (error) {
-  console.error("Build failed while preparing dist and cache versioning.");
+  console.error("Build failed: unable to copy files or update service worker cache version.");
   console.error(error);
   process.exitCode = 1;
 }
