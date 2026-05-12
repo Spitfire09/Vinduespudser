@@ -106,3 +106,27 @@ textarea {
   .inline-form > * { width: 100%; }
   .toolbar > * { width: 100%; }
 }
+.badge {
+  display: inline-block;
+  background: #e0edff;
+  color: #0b57d0;
+  border-radius: 12px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+.route-day {
+  border: 1px dashed #c5d2e6;
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #f8faff;
+}
+.route-date {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+#routeSection {
+  margin-top: 0.75rem;
+}
