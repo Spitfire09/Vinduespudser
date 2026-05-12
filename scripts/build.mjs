@@ -27,4 +27,9 @@ async function build() {
   await writeFile(swPath, updatedSw);
 }
 
-build();
+try {
+  await build();
+} catch (error) {
+  console.error("Build failed:", error);
+  process.exitCode = 1;
+}

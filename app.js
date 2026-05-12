@@ -247,16 +247,11 @@ function scheduleReminders() {
   }
 }
 
-function renderRoleVisibility() {
-  byId("syncSection").style.display = "block";
-}
-
 function renderAll() {
   renderStats();
   renderCustomers();
   renderTasks();
   renderCalendar();
-  renderRoleVisibility();
   byId("name").value = state.profile.name || "";
   byId("email").value = state.profile.email || "";
   byId("sheetUrl").value = state.settings.sheetUrl || "";
