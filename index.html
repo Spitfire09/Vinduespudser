@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#0b57d0" />
     <meta name="description" content="Vinduespudser personlig PWA" />
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" href="/assets/icons/icon-192.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="/styles.css" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icons/icon-192.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="./styles.css" />
     <title>Vinduespudser PWA</title>
   </head>
   <body>
@@ -25,12 +25,6 @@
         <form id="loginForm">
           <label>Navn <input id="name" required /></label>
           <label>Email <input id="email" type="email" required /></label>
-          <label>Rolle
-            <select id="role">
-              <option value="owner">Ejer</option>
-              <option value="worker">Medarbejder</option>
-            </select>
-          </label>
           <button type="submit">Gem profil</button>
         </form>
       </section>
@@ -99,6 +93,6 @@
       </section>
     </main>
 
-    <script src="/app.js"></script>
+    <script src="./app.js"></script>
   </body>
 </html>

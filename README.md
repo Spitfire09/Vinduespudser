@@ -4,7 +4,7 @@ En personlig, installérbar PWA til at håndtere kunder, opgaver/ordrer og planl
 
 ## Hvad er implementeret
 
-- Login/profil (navn, email, rolle)
+- Login/profil (navn, email)
 - Dashboard med nøgletal
 - Kundeliste + oprettelse
 - Opgaveliste med statusflow (ny/igang/færdig)
@@ -25,6 +25,14 @@ npm run serve
 ```
 
 Åbn derefter: `http://localhost:4173`
+
+## Build
+
+```bash
+npm run build
+```
+
+Build output lægges i `dist/` og cache-navnet i service worker opdateres for hver build.
 
 ## Google Sheets (Apps Script)
 
