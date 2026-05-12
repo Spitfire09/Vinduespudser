@@ -8,6 +8,9 @@ En personlig, installérbar PWA til at håndtere kunder, opgaver/ordrer og planl
 - Dashboard med nøgletal
 - Kundeliste + oprettelse
 - Opgaveliste med statusflow (ny/igang/færdig)
+- **Gentagende opgaver** – sæt interval (ugentlig/månedlig/kvartalsvis); næste opgave oprettes automatisk, når en markeres færdig
+- **Faktura fra opgave** – knappen "Lav faktura" på færdige opgaver forudfylder faktura-formularen
+- **Ruteliste** – gruppér kommende opgaver pr. dag med kundeadresser (tænd/sluk via knap)
 - Noter og billed-vedhæftning på opgaver
 - Søgning, filtrering og sortering
 - Simpel kalenderoversigt pr. dato

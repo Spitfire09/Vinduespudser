@@ -52,6 +52,80 @@ function byId(id) {
   return document.getElementById(id);
 }
 
+const INTERVAL_LABELS = { weekly: "Ugentlig", monthly: "Månedlig", quarterly: "Kvartalsvis" };
+
+function createNextRecurringTask(task) {
+  if (!task.interval) return;
+  const base = new Date(task.date);
+  if (task.interval === "weekly") {
+    base.setDate(base.getDate() + 7);
+  } else if (task.interval === "monthly") {
+    base.setMonth(base.getMonth() + 1);
+  } else if (task.interval === "quarterly") {
+    base.setMonth(base.getMonth() + 3);
+  } else {
+    return;
+  }
+  const nextDate = base.toISOString().slice(0, 10);
+  const exists = state.tasks.some(
+    (t) => t.customerId === task.customerId && t.title === task.title && t.date === nextDate
+  );
+  if (exists) return;
+  const newTask = {
+    id: uid(),
+    customerId: task.customerId,
+    title: task.title,
+    date: nextDate,
+    status: "new",
+    note: task.note || "",
+    attachment: "",
+    interval: task.interval,
+  };
+  state.tasks.push(newTask);
+  saveState();
+  queueSync("task_create", newTask);
+}
+
+function createInvoiceFromTask(task) {
+  const invoiceCustomer = byId("invoiceCustomer");
+  invoiceCustomer.value = task.customerId;
+  const desc = task.note ? `${task.title}\n${task.note}` : task.title;
+  byId("invoiceText").value = desc;
+  byId("invoiceDate").value = task.date;
+  byId("invoiceSection").scrollIntoView({ behavior: "smooth" });
+}
+
+function renderRouteView() {
+  const routeDiv = byId("routeView");
+  if (!routeDiv) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const pending = [...state.tasks]
+    .filter((t) => t.status !== "done" && t.date >= today)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.customerId.localeCompare(b.customerId));
+
+  const byDate = {};
+  for (const t of pending) {
+    (byDate[t.date] = byDate[t.date] || []).push(t);
+  }
+
+  const keys = Object.keys(byDate);
+  if (!keys.length) {
+    routeDiv.innerHTML = "<span class='small'>Ingen kommende opgaver.</span>";
+    return;
+  }
+  routeDiv.innerHTML = keys
+    .map((date) => {
+      const items = byDate[date]
+        .map((t) => {
+          const c = state.customers.find((x) => x.id === t.customerId);
+          return `<div class="small">• <strong>${c?.name || "Ukendt"}</strong> – ${c?.address || ""} (${t.title})</div>`;
+        })
+        .join("");
+      return `<div class="route-day"><div class="route-date">${date}</div>${items}</div>`;
+    })
+    .join("");
+}
+
 function renderStats() {
   const done = state.tasks.filter((t) => t.status === "done").length;
   const today = new Date().toISOString().slice(0, 10);
@@ -124,8 +198,9 @@ function renderTasks() {
   for (const t of rows) {
     const customer = state.customers.find((c) => c.id === t.customerId)?.name || "Ukendt kunde";
     const li = document.createElement("li");
+    const intervalBadge = t.interval ? `<span class="badge">${INTERVAL_LABELS[t.interval] || t.interval}</span>` : "";
     li.innerHTML = `
-      <strong>${t.title}</strong>
+      <strong>${t.title}</strong> ${intervalBadge}
       <div class="small">${customer} · ${t.date} · ${t.status}</div>
       <div>${t.note || ""}</div>
       ${t.attachment ? `<img src="${t.attachment}" alt="Vedhæftet" style="max-width:120px; margin-top:6px; border-radius:6px;" />` : ""}
@@ -146,6 +221,9 @@ function renderTasks() {
       t.status = statusSelect.value;
       saveState();
       queueSync("task_status", { id: t.id, status: t.status });
+      if (t.status === "done" && t.interval) {
+        createNextRecurringTask(t);
+      }
       renderAll();
       autoSync();
     });
@@ -161,7 +239,16 @@ function renderTasks() {
       autoSync();
     });
 
-    row.append(statusSelect, del);
+    if (t.status === "done") {
+      const invoiceBtn = document.createElement("button");
+      invoiceBtn.type = "button";
+      invoiceBtn.textContent = "Lav faktura";
+      invoiceBtn.style.background = "#16a34a";
+      invoiceBtn.addEventListener("click", () => createInvoiceFromTask(t));
+      row.append(statusSelect, invoiceBtn, del);
+    } else {
+      row.append(statusSelect, del);
+    }
     li.appendChild(row);
     list.appendChild(li);
   }
@@ -375,6 +462,7 @@ function renderAll() {
   renderCustomers();
   renderTasks();
   renderCalendar();
+  renderRouteView();
   renderInvoices();
   byId("name").value = state.profile.name || "";
   byId("email").value = state.profile.email || "";
@@ -425,6 +513,7 @@ byId("taskForm").addEventListener("submit", async (e) => {
     status: byId("taskStatus").value,
     note: byId("taskNote").value.trim(),
     attachment: file ? await fileToDataUrl(file) : "",
+    interval: byId("taskInterval").value,
   };
   state.tasks.push(task);
   saveState();
@@ -463,12 +552,19 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   renderInvoices();
 });
 
-
+["taskSearch", "taskFilterStatus", "taskSort"].forEach((id) => {
   byId(id).addEventListener("input", renderTasks);
   byId(id).addEventListener("change", renderTasks);
 });
 
 byId("exportCsvBtn").addEventListener("click", exportCsv);
+
+byId("toggleRouteBtn").addEventListener("click", () => {
+  const routeSection = byId("routeSection");
+  const hidden = routeSection.hidden;
+  routeSection.hidden = !hidden;
+  byId("toggleRouteBtn").textContent = hidden ? "Skjul ruteliste" : "Vis ruteliste";
+});
 
 byId("saveSyncSettings").addEventListener("click", () => {
   state.settings.sheetUrl = byId("sheetUrl").value.trim();

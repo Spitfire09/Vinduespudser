@@ -57,6 +57,12 @@
             <option value="in_progress">Igang</option>
             <option value="done">Færdig</option>
           </select>
+          <select id="taskInterval">
+            <option value="">Ingen gentagelse</option>
+            <option value="weekly">Ugentlig</option>
+            <option value="monthly">Månedlig</option>
+            <option value="quarterly">Kvartalsvis</option>
+          </select>
           <input id="taskNote" placeholder="Note" />
           <input id="taskAttachment" type="file" accept="image/*" />
           <button type="submit">Tilføj opgave</button>
@@ -75,6 +81,11 @@
             <option value="dateDesc">Dato faldende</option>
           </select>
           <button id="exportCsvBtn" type="button">Eksportér CSV</button>
+          <button id="toggleRouteBtn" type="button">Vis ruteliste</button>
+        </div>
+
+        <div id="routeSection" hidden>
+          <div id="routeView"></div>
         </div>
 
         <div id="calendar"></div>
