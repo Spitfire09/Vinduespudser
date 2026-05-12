@@ -7,7 +7,7 @@ const syncStatus = document.getElementById("syncStatus");
 let deferredPrompt;
 
 const defaultState = {
-  profile: { name: "", email: "", role: "owner" },
+  profile: { name: "", email: "" },
   customers: [],
   tasks: [],
   settings: { sheetUrl: "", sheetToken: "" },
@@ -247,19 +247,13 @@ function scheduleReminders() {
   }
 }
 
-function renderRoleVisibility() {
-  byId("syncSection").style.display = state.profile.role === "worker" ? "none" : "block";
-}
-
 function renderAll() {
   renderStats();
   renderCustomers();
   renderTasks();
   renderCalendar();
-  renderRoleVisibility();
   byId("name").value = state.profile.name || "";
   byId("email").value = state.profile.email || "";
-  byId("role").value = state.profile.role || "owner";
   byId("sheetUrl").value = state.settings.sheetUrl || "";
   byId("sheetToken").value = state.settings.sheetToken || "";
 }
@@ -269,7 +263,6 @@ byId("loginForm").addEventListener("submit", (e) => {
   state.profile = {
     name: byId("name").value.trim(),
     email: byId("email").value.trim(),
-    role: byId("role").value,
   };
   saveState();
   queueSync("profile_update", state.profile);
@@ -361,7 +354,7 @@ installBtn.addEventListener("click", async () => {
 });
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("/sw.js");
+  navigator.serviceWorker.register("./sw.js");
 }
 
 renderAll();
