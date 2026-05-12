@@ -142,7 +142,10 @@
           <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
           <form id="syncForm" class="settings-form">
             <label>Apps Script URL <input id="sheetUrl" placeholder="https://script.google.com/..." /></label>
-            <label>Access token (valgfri) <input id="sheetToken" placeholder="token" type="password" /></label>
+            <label>
+              <span>Access token (valgfri)</span>
+              <input id="sheetToken" placeholder="token" type="password" aria-label="Access token - valgfrit felt" />
+            </label>
             <div class="header-actions">
               <button type="submit">Gem opsætning</button>
               <button id="testSyncBtn" type="button">Test adgang</button>

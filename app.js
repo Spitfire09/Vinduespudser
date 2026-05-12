@@ -1,5 +1,6 @@
 const STORAGE_KEY = "vinduespudser-data-v1";
 const SYNC_QUEUE_KEY = "vinduespudser-sync-queue-v1";
+const DEFAULT_COMPANY_NAME = "Vinduespudser";
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
 const syncStatus = document.getElementById("syncStatus");
@@ -492,12 +493,14 @@ function downloadInvoicePdf(doc, invoiceNumber) {
 }
 
 function openInvoiceEmail(customer, invoiceNumber, amount, date) {
-  const companyName = state.company.name || "Vinduespudser";
+  const companyName = state.company.name || DEFAULT_COMPANY_NAME;
   const subject = encodeURIComponent(`Faktura ${invoiceNumber} – ${date}`);
   const body = encodeURIComponent(
     `Kære ${customer.name},\n\nVedhæftet finder du faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.\n\nMed venlig hilsen\n${companyName}`
   );
   const mailto = `mailto:${customer.email || ""}?subject=${subject}&body=${body}`;
+  // Using window.location.href instead of window.open() for better mobile compatibility
+  // and to avoid popup blockers that might prevent the email client from opening
   window.location.href = mailto;
 }
 
@@ -589,7 +592,10 @@ document.querySelectorAll(".tab-btn").forEach(btn => {
     
     // Update content
     document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
-    document.querySelector(`.tab-content[data-tab="${tab}"]`).classList.add("active");
+    const targetContent = document.querySelector(`.tab-content[data-tab="${tab}"]`);
+    if (targetContent) {
+      targetContent.classList.add("active");
+    }
   });
 });
 
