@@ -4,7 +4,7 @@ import path from "node:path";
 
 const rootDir = process.cwd();
 const distDir = path.join(rootDir, "dist");
-const buildId = (process.env.GITHUB_SHA || randomUUID().replace(/-/g, "")).slice(0, 12);
+const buildId = process.env.GITHUB_SHA?.slice(0, 12) || randomUUID().replace(/-/g, "").slice(0, 12);
 
 async function build() {
   await rm(distDir, { recursive: true, force: true });
@@ -31,6 +31,7 @@ async function build() {
 try {
   await build();
 } catch (error) {
-  console.error("Build failed:", error);
+  console.error("Build failed while preparing dist and cache versioning.");
+  console.error(error);
   process.exitCode = 1;
 }
