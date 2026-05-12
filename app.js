@@ -87,6 +87,30 @@ function renderCustomers() {
     taskSelect.appendChild(makeOpt());
     invoiceSelect.appendChild(makeOpt());
   }
+  renderInvoiceTaskOptions();
+}
+
+function getInvoiceEligibleTasks(customerId = "") {
+  return state.tasks
+    .filter((t) => t.status === "done" && (!customerId || t.customerId === customerId))
+    .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+function renderInvoiceTaskOptions() {
+  const invoiceTask = byId("invoiceTask");
+  const invoiceCustomerId = byId("invoiceCustomer").value;
+  const selectedTaskId = invoiceTask.value;
+  invoiceTask.innerHTML = `<option value="">Baser på udført opgave (valgfri)</option>`;
+  for (const task of getInvoiceEligibleTasks(invoiceCustomerId)) {
+    const customer = state.customers.find((c) => c.id === task.customerId)?.name || "Ukendt kunde";
+    const option = document.createElement("option");
+    option.value = task.id;
+    option.textContent = `${task.date} · ${customer} · ${task.title}`;
+    invoiceTask.appendChild(option);
+  }
+  if (selectedTaskId && getInvoiceEligibleTasks(invoiceCustomerId).some((task) => task.id === selectedTaskId)) {
+    invoiceTask.value = selectedTaskId;
+  }
 }
 
 function renderCalendar() {
@@ -327,11 +351,13 @@ function renderInvoices() {
   const sorted = [...state.invoices].sort((a, b) => b.date.localeCompare(a.date));
   for (const inv of sorted) {
     const customer = state.customers.find((c) => c.id === inv.customerId);
+    const sourceTask = state.tasks.find((task) => task.id === inv.taskId);
     const li = document.createElement("li");
     li.innerHTML = `
       <strong>Faktura #${inv.invoiceNumber}</strong>
       <div class="small">${customer?.name || "Ukendt"} · ${inv.date} · ${formatAmount(inv.amount)} kr.</div>
       <div class="small">${inv.description}</div>
+      ${sourceTask ? `<div class="small">Baseret på opgave: ${sourceTask.title}</div>` : ""}
     `;
     const row = document.createElement("div");
     row.className = "header-actions";
@@ -436,7 +462,9 @@ byId("taskForm").addEventListener("submit", async (e) => {
 
 byId("invoiceForm").addEventListener("submit", (e) => {
   e.preventDefault();
-  const customerId = byId("invoiceCustomer").value;
+  const selectedTaskId = byId("invoiceTask").value;
+  const selectedTask = state.tasks.find((task) => task.id === selectedTaskId && task.status === "done");
+  const customerId = selectedTask?.customerId || byId("invoiceCustomer").value;
   const customer = state.customers.find((c) => c.id === customerId);
   if (!customer) return;
 
@@ -447,7 +475,8 @@ byId("invoiceForm").addEventListener("submit", (e) => {
     id: uid(),
     invoiceNumber,
     customerId,
-    description: byId("invoiceText").value.trim(),
+    taskId: selectedTask?.id || "",
+    description: byId("invoiceText").value.trim() || selectedTask?.title || "",
     amount: parseFloat(byId("invoiceAmount").value),
     date: byId("invoiceDate").value,
   };
@@ -463,7 +492,18 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   renderInvoices();
 });
 
+byId("invoiceCustomer").addEventListener("change", renderInvoiceTaskOptions);
+byId("invoiceTask").addEventListener("change", () => {
+  const selectedTask = state.tasks.find((task) => task.id === byId("invoiceTask").value && task.status === "done");
+  if (!selectedTask) return;
+  byId("invoiceCustomer").value = selectedTask.customerId;
+  if (!byId("invoiceText").value.trim()) {
+    byId("invoiceText").value = selectedTask.note ? `${selectedTask.title} — ${selectedTask.note}` : selectedTask.title;
+  }
+  renderInvoiceTaskOptions();
+});
 
+["taskSearch", "taskFilterStatus", "taskSort"].forEach((id) => {
   byId(id).addEventListener("input", renderTasks);
   byId(id).addEventListener("change", renderTasks);
 });

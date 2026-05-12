@@ -84,6 +84,9 @@
       <section class="card" id="invoiceSection">
         <h2>Fakturaer</h2>
         <form id="invoiceForm" class="inline-form">
+          <select id="invoiceTask">
+            <option value="">Baser på udført opgave (valgfri)</option>
+          </select>
           <select id="invoiceCustomer" required></select>
           <textarea id="invoiceText" placeholder="Beskrivelse" required rows="2"></textarea>
           <input id="invoiceAmount" type="number" min="0" step="0.01" placeholder="Beløb (kr)" required />
