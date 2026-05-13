@@ -904,10 +904,11 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   const doc = generateInvoicePdf(customer, invoiceNumber, inv.description, inv.amount, inv.date);
   downloadInvoicePdf(doc, invoiceNumber);
   
-  // Open email client after a delay to allow download to complete
+  // Open email client after a delay to allow download to initiate
+  // Use longer delay here since form submission may have additional processing
   setTimeout(() => {
     openInvoiceEmail(customer, invoiceNumber, inv.amount, inv.date, true);
-  }, EMAIL_OPEN_DELAY_MS * 2); // Double delay for form submission to ensure download starts
+  }, EMAIL_OPEN_DELAY_MS * 2);
 
   e.target.reset();
   byId("invoiceDate").value = new Date().toISOString().slice(0, 10);
