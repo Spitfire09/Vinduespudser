@@ -22,6 +22,7 @@ const defaultState = {
   invoices: [],
   invoiceCounter: 1,
   settings: { sheetUrl: "", sheetToken: "" },
+  versionHistory: []
 };
 
 const state = loadState();
@@ -127,7 +128,8 @@ function renderRouteView() {
       const items = byDate[date]
         .map((t) => {
           const c = state.customers.find((x) => x.id === t.customerId);
-          return `<div class="small">• <strong>${c?.name || "Ukendt"}</strong> – ${c?.address || ""} (${t.title})</div>`;
+          const address = c?.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c?.address || "");
+          return `<div class="small">• <strong>${c?.name || "Ukendt"}</strong> – ${address} (${t.title})</div>`;
         })
         .join("");
       return `<div class="route-day"><div class="route-date">${date}</div>${items}</div>`;
@@ -196,7 +198,8 @@ function renderCustomers() {
   list.innerHTML = "";
   for (const c of state.customers) {
     const li = document.createElement("li");
-    li.innerHTML = `<strong>${c.name}</strong><div class="small">${c.address} · ${c.phone || "-"} · ${c.email || "-"}</div>`;
+    const address = c.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "");
+    li.innerHTML = `<strong>${c.name}</strong><div class="small">${address} · ${c.phone || "-"} · ${c.email || "-"}</div>`;
     list.appendChild(li);
   }
 
@@ -448,7 +451,15 @@ function generateInvoicePdf(customer, invoiceNumber, description, amount, date) 
 
   let y = 72;
   doc.text(customer.name, LEFT, y); y += LINE_HEIGHT;
-  doc.text(customer.address, LEFT, y); y += LINE_HEIGHT;
+  
+  // Handle both old and new address formats
+  if (customer.street && customer.postalCode && customer.city) {
+    doc.text(customer.street, LEFT, y); y += LINE_HEIGHT;
+    doc.text(`${customer.postalCode} ${customer.city}`, LEFT, y); y += LINE_HEIGHT;
+  } else if (customer.address) {
+    doc.text(customer.address, LEFT, y); y += LINE_HEIGHT;
+  }
+  
   if (customer.phone) { doc.text(`Tlf: ${customer.phone}`, LEFT, y); y += LINE_HEIGHT; }
   if (customer.email) { doc.text(`Email: ${customer.email}`, LEFT, y); y += LINE_HEIGHT; }
 
@@ -553,11 +564,91 @@ function renderInvoices() {
   }
 }
 
+function renderAllCustomersList() {
+  const container = byId("allCustomersList");
+  if (!container) return;
+  
+  if (state.customers.length === 0) {
+    container.innerHTML = "<p class='small'>Ingen kunder endnu.</p>";
+    return;
+  }
+  
+  container.innerHTML = "";
+  const table = document.createElement("table");
+  table.style.width = "100%";
+  table.style.borderCollapse = "collapse";
+  
+  const thead = document.createElement("thead");
+  thead.innerHTML = `
+    <tr>
+      <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Navn</th>
+      <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Adresse</th>
+      <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Telefon</th>
+      <th style="text-align: left; padding: 8px; border-bottom: 2px solid #ddd;">Email</th>
+    </tr>
+  `;
+  table.appendChild(thead);
+  
+  const tbody = document.createElement("tbody");
+  for (const c of state.customers) {
+    const tr = document.createElement("tr");
+    const address = c.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "-");
+    tr.innerHTML = `
+      <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${c.name}</strong></td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${address}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${c.phone || "-"}</td>
+      <td style="padding: 8px; border-bottom: 1px solid #eee;">${c.email || "-"}</td>
+    `;
+    tbody.appendChild(tr);
+  }
+  table.appendChild(tbody);
+  container.appendChild(table);
+}
+
+function renderVersionHistory() {
+  const container = byId("versionHistory");
+  if (!container) return;
+  
+  // Display hardcoded version history
+  const versionEntries = [
+    { version: "v1.3.0", date: "2026-05-13", description: "Tilføjet Kunder-fane, opdelt kundeadresse i vej/postnr/by, og versionshistorik" },
+    { version: "v1.2.0", date: "2026-05-12", description: "Forbedret fakturafunktionalitet og email-integration" },
+    { version: "v1.1.0", date: "2026-05-10", description: "Tilføjet support for Google Sheets synkronisering" },
+    { version: "v1.0.0", date: "2026-05-08", description: "Initial version med Dashboard, Fakturaer og Opsætning" }
+  ];
+  
+  if (!state.versionHistory || state.versionHistory.length === 0) {
+    state.versionHistory = versionEntries;
+    saveState();
+  }
+  
+  container.innerHTML = "";
+  const list = document.createElement("ul");
+  list.style.listStyle = "none";
+  list.style.padding = "0";
+  
+  const entries = state.versionHistory.slice(0, 5);
+  for (const entry of entries) {
+    const li = document.createElement("li");
+    li.style.marginBottom = "12px";
+    li.style.paddingBottom = "12px";
+    li.style.borderBottom = "1px solid #eee";
+    li.innerHTML = `
+      <div><strong>${entry.version}</strong> <span class="small" style="color: #666;">${entry.date}</span></div>
+      <div class="small">${entry.description}</div>
+    `;
+    list.appendChild(li);
+  }
+  container.appendChild(list);
+}
+
 function renderAll() {
   renderStats();
   renderTodayTasks();
   renderMonthStats();
   renderCustomers();
+  renderAllCustomersList();
+  renderVersionHistory();
   renderTasks();
   renderCalendar();
   renderRouteView();
@@ -622,7 +713,9 @@ byId("customerForm").addEventListener("submit", (e) => {
   const c = {
     id: uid(),
     name: byId("customerName").value.trim(),
-    address: byId("customerAddress").value.trim(),
+    street: byId("customerStreet").value.trim(),
+    postalCode: byId("customerPostalCode").value.trim(),
+    city: byId("customerCity").value.trim(),
     phone: byId("customerPhone").value.trim(),
     email: byId("customerEmail").value.trim(),
   };

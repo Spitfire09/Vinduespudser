@@ -21,6 +21,7 @@
 
     <nav class="tabs">
       <button class="tab-btn active" data-tab="dashboard">Dashboard</button>
+      <button class="tab-btn" data-tab="customers">Kunder</button>
       <button class="tab-btn" data-tab="invoices">Fakturaer</button>
       <button class="tab-btn" data-tab="settings">Opsætning</button>
     </nav>
@@ -42,7 +43,9 @@
           <h2>Kunder</h2>
           <form id="customerForm" class="inline-form">
             <input id="customerName" placeholder="Navn" required />
-            <input id="customerAddress" placeholder="Adresse" required />
+            <input id="customerStreet" placeholder="Vej" required />
+            <input id="customerPostalCode" placeholder="Postnummer" required />
+            <input id="customerCity" placeholder="By" required />
             <input id="customerPhone" placeholder="Telefon" />
             <input id="customerEmail" type="email" placeholder="Email" />
             <button type="submit">Tilføj kunde</button>
@@ -94,6 +97,14 @@
 
           <div id="calendar"></div>
           <ul id="taskList"></ul>
+        </section>
+      </div>
+
+      <!-- Customers Tab -->
+      <div class="tab-content" data-tab="customers">
+        <section class="card">
+          <h2>Alle kunder</h2>
+          <div id="allCustomersList"></div>
         </section>
       </div>
 
@@ -152,6 +163,11 @@
             </div>
           </form>
           <p id="syncStatus"></p>
+        </section>
+
+        <section class="card">
+          <h2>Versionshistorik</h2>
+          <div id="versionHistory"></div>
         </section>
       </div>
     </main>
