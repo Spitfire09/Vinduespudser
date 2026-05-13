@@ -58,6 +58,8 @@ Appen understøtter fuld **bidirektionel synkronisering** med Google Sheets via 
 - **GET** - Hent data fra Google Sheets til appen
 - **Fuld sync** - Hent data først, gem derefter (sikrer backup)
 
+📖 **[Se den komplette opsætningsguide](GOOGLE_SHEETS_GUIDE.md)** for trin-for-trin instruktioner.
+
 ### Data struktur
 
 Appen sender en POST med følgende struktur:
