@@ -1021,6 +1021,13 @@ updateBtn.addEventListener("click", async () => {
   updateBtn.textContent = "🔄 Tjekker...";
   updateBtn.disabled = true;
   
+  // Set timeout to prevent button from being stuck
+  const timeout = setTimeout(() => {
+    updateBtn.textContent = "🔄 Opdater";
+    updateBtn.disabled = false;
+    alert("Opdatering tog for lang tid. Prøv igen.");
+  }, 15000); // 15 second timeout
+  
   try {
     if ("serviceWorker" in navigator) {
       // Get the current service worker registration
@@ -1034,28 +1041,33 @@ updateBtn.addEventListener("click", async () => {
         if (registration.waiting) {
           registration.waiting.postMessage({ type: "SKIP_WAITING" });
           
-          // Wait for the new service worker to take control
+          // Wait for the new service worker to take control (once only)
           navigator.serviceWorker.addEventListener("controllerchange", () => {
+            clearTimeout(timeout);
             window.location.reload();
-          });
+          }, { once: true });
         } else {
           // No update available, just clear cache and reload
           if ("caches" in window) {
             const cacheNames = await caches.keys();
             await Promise.all(cacheNames.map(name => caches.delete(name)));
           }
+          clearTimeout(timeout);
           window.location.reload();
         }
       } else {
         // No service worker registered, just reload
+        clearTimeout(timeout);
         window.location.reload();
       }
     } else {
       // No service worker support, just reload
+      clearTimeout(timeout);
       window.location.reload();
     }
   } catch (error) {
     console.error("Update check failed:", error);
+    clearTimeout(timeout);
     updateBtn.textContent = "🔄 Opdater";
     updateBtn.disabled = false;
     alert("Kunne ikke tjekke for opdateringer. Prøv at genindlæse siden manuelt.");
