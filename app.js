@@ -2,6 +2,7 @@ const STORAGE_KEY = "vinduespudser-data-v1";
 const SYNC_QUEUE_KEY = "vinduespudser-sync-queue-v1";
 const DEFAULT_COMPANY_NAME = "Vinduespudser";
 const EMAIL_OPEN_DELAY_MS = 100; // Delay to prevent email opening from interrupting PDF download
+const FORM_SUBMIT_EMAIL_DELAY_MS = 200; // Longer delay for form submissions to account for additional processing
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
 const updateBtn = document.getElementById("updateBtn");
@@ -905,10 +906,10 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   downloadInvoicePdf(doc, invoiceNumber);
   
   // Open email client after a delay to allow download to initiate
-  // Use longer delay here since form submission may have additional processing
+  // Use longer delay for form submission to account for additional processing
   setTimeout(() => {
     openInvoiceEmail(customer, invoiceNumber, inv.amount, inv.date, true);
-  }, EMAIL_OPEN_DELAY_MS * 2);
+  }, FORM_SUBMIT_EMAIL_DELAY_MS);
 
   e.target.reset();
   byId("invoiceDate").value = new Date().toISOString().slice(0, 10);
