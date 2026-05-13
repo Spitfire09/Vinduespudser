@@ -51,22 +51,86 @@ Versionshistorikken vises automatisk på Opsætning-fanen i applikationen.
 
 ## Google Sheets (Apps Script)
 
+### Oversigt
+
+Appen understøtter fuld **bidirektionel synkronisering** med Google Sheets via Google Apps Script:
+- **POST** - Gem data fra appen til Google Sheets
+- **GET** - Hent data fra Google Sheets til appen
+- **Fuld sync** - Hent data først, gem derefter (sikrer backup)
+
+### Data struktur
+
 Appen sender en POST med følgende struktur:
 
 ```json
 {
   "token": "optional",
   "payload": {
-    "profile": {},
+    "company": {
+      "name": "",
+      "address": "",
+      "cvr": "",
+      "email": "",
+      "phone": "",
+      "mobilePay": "",
+      "bankAccount": ""
+    },
     "customers": [],
     "tasks": [],
+    "invoices": [],
+    "invoiceCounter": 1,
     "queue": [],
     "syncedAt": "ISO timestamp"
   }
 }
 ```
 
-Lav et Google Apps Script Web App endpoint, der modtager JSON i `doPost(e)` og skriver data til ark.
+Ved GET-anmodninger returnerer scriptet:
+
+```json
+{
+  "company": {},
+  "customers": [],
+  "tasks": [],
+  "invoices": [],
+  "invoiceCounter": 1,
+  "lastSynced": "ISO timestamp"
+}
+```
+
+### Opsætning af Google Apps Script
+
+1. **Opret et nyt Google Sheet** til at gemme dine data
+2. **Åbn Script Editor** (Udvidelser → Apps Script)
+3. **Kopier indholdet** fra `google-apps-script-example.js` til Script Editor
+4. **Valgfrit**: Sæt `AUTH_TOKEN` konstanten for at aktivere authentication
+5. **Deploy som Web App**:
+   - Klik på "Deploy" → "New deployment"
+   - Vælg type: "Web app"
+   - Execute as: **Me** (din Google konto)
+   - Who has access: **Anyone** (eller "Anyone with the link")
+   - Klik "Deploy"
+6. **Kopier Web App URL** fra deployment dialogen
+7. **Indsæt URL'en** i Vinduespudser appen under Opsætning → Google Sheets opsætning
+8. **Valgfrit**: Hvis du har sat AUTH_TOKEN, indsæt den også i "Access token" feltet
+9. **Test forbindelsen** med "Test adgang" knappen
+10. **Kør fuld synkronisering** for at gemme alle eksisterende data
+
+### Funktioner i appen
+
+- **Test adgang** - Tjekker om Google Sheets er konfigureret korrekt
+- **Hent data fra Google Sheets** - Indlæser data fra Google Sheets til appen (overskriver lokale data)
+- **Fuld synkronisering** - Henter først data fra Sheets, gemmer derefter alle data tilbage (anbefalet)
+- **Automatisk sync** - Appen synkroniserer automatisk ved ændringer og når du er online
+
+### Data arkitektur
+
+Google Sheets vil indeholde følgende ark (sheets):
+- **Company** - Firma information
+- **Customers** - Kundeliste
+- **Tasks** - Opgaver/ordrer
+- **Invoices** - Fakturaer
+- **SyncLog** - Log over synkroniseringer (sidste 100 entries)
 
 ## Begrænsninger ift. 1:1
 

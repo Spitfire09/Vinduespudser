@@ -367,6 +367,96 @@ async function sendToSheet(payload) {
   return true;
 }
 
+async function loadFromSheet() {
+  if (!state.settings.sheetUrl) {
+    return null;
+  }
+  
+  try {
+    const res = await fetch(state.settings.sheetUrl, {
+      method: "GET",
+      headers: { 
+        "Content-Type": "application/json",
+        ...(state.settings.sheetToken && { "Authorization": `Bearer ${state.settings.sheetToken}` })
+      },
+    });
+    
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    }
+    
+    const data = await res.json();
+    return data;
+  } catch (err) {
+    console.error("Fejl ved indlæsning fra Google Sheets:", err);
+    return null;
+  }
+}
+
+async function syncFromSheet() {
+  if (!navigator.onLine) return false;
+  if (!state.settings.sheetUrl) return false;
+  
+  try {
+    const data = await loadFromSheet();
+    if (!data) return false;
+    
+    // Merge data from Google Sheets
+    if (data.company) {
+      state.company = { ...defaultState.company, ...data.company };
+    }
+    if (Array.isArray(data.customers)) {
+      state.customers = data.customers;
+    }
+    if (Array.isArray(data.tasks)) {
+      state.tasks = data.tasks;
+    }
+    if (Array.isArray(data.invoices)) {
+      state.invoices = data.invoices;
+    }
+    if (typeof data.invoiceCounter === "number") {
+      state.invoiceCounter = data.invoiceCounter;
+    }
+    
+    saveState();
+    return true;
+  } catch (err) {
+    console.error("Fejl ved synkronisering fra Google Sheets:", err);
+    return false;
+  }
+}
+
+async function fullSync() {
+  if (!navigator.onLine) return;
+  if (!state.settings.sheetUrl) return;
+  
+  try {
+    // First, try to load data from Google Sheets
+    const loaded = await syncFromSheet();
+    
+    // Then send current state to ensure everything is backed up
+    const ok = await sendToSheet({
+      company: state.company,
+      customers: state.customers,
+      tasks: state.tasks,
+      invoices: state.invoices,
+      invoiceCounter: state.invoiceCounter,
+      queue: getQueue(),
+      syncedAt: new Date().toISOString(),
+    });
+    
+    if (ok) {
+      clearQueue();
+      if (syncStatus) {
+        syncStatus.textContent = `✓ Fuld synkronisering gennemført (${new Date().toLocaleTimeString()})`;
+      }
+      renderAll();
+    }
+  } catch (err) {
+    if (syncStatus) syncStatus.textContent = `✗ Sync fejlede: ${err.message}`;
+  }
+}
+
 async function autoSync() {
   if (!navigator.onLine) return;
   const queue = getQueue();
@@ -610,6 +700,7 @@ function renderVersionHistory() {
   
   // Version entries are now managed directly here, not stored in state
   const versionEntries = [
+    { version: "v1.4.0", date: "2026-05-13", description: "Tilføjet bidirektionel Google Sheets synkronisering (hent + gem data)" },
     { version: "v1.3.0", date: "2026-05-13", description: "Tilføjet Kunder-fane, opdelt kundeadresse i vej/postnr/by, og versionshistorik" },
     { version: "v1.2.0", date: "2026-05-12", description: "Forbedret fakturafunktionalitet og email-integration" },
     { version: "v1.1.0", date: "2026-05-10", description: "Tilføjet support for Google Sheets synkronisering" },
@@ -830,6 +921,42 @@ byId("testSyncBtn").addEventListener("click", async () => {
   }
 });
 
+byId("loadFromSheetBtn").addEventListener("click", async () => {
+  if (!state.settings.sheetUrl) {
+    syncStatus.textContent = "⚠ Angiv venligst en Apps Script URL først.";
+    return;
+  }
+  
+  syncStatus.textContent = "⏳ Henter data fra Google Sheets...";
+  
+  try {
+    const loaded = await syncFromSheet();
+    if (loaded) {
+      syncStatus.textContent = `✓ Data hentet fra Google Sheets (${new Date().toLocaleTimeString()})`;
+      renderAll();
+    } else {
+      syncStatus.textContent = "⚠ Kunne ikke hente data fra Google Sheets.";
+    }
+  } catch (err) {
+    syncStatus.textContent = `✗ Fejl: ${err.message}`;
+  }
+});
+
+byId("fullSyncBtn").addEventListener("click", async () => {
+  if (!state.settings.sheetUrl) {
+    syncStatus.textContent = "⚠ Angiv venligst en Apps Script URL først.";
+    return;
+  }
+  
+  syncStatus.textContent = "⏳ Udfører fuld synkronisering...";
+  
+  try {
+    await fullSync();
+  } catch (err) {
+    syncStatus.textContent = `✗ Fejl: ${err.message}`;
+  }
+});
+
 notifyBtn.addEventListener("click", async () => {
   if (!("Notification" in window)) {
     alert("Notifikationer understøttes ikke i denne browser.");
@@ -861,6 +988,18 @@ if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("./sw.js");
 }
 
+// Initialize the app
 renderAll();
+
+// Try to load data from Google Sheets on startup if configured
+if (state.settings.sheetUrl && navigator.onLine) {
+  syncFromSheet().then(loaded => {
+    if (loaded) {
+      renderAll();
+      if (syncStatus) syncStatus.textContent = "✓ Data indlæst fra Google Sheets ved opstart.";
+    }
+  });
+}
+
 autoSync();
 setTimeout(scheduleReminders, 2000);

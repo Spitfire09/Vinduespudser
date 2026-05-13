@@ -2,6 +2,27 @@
 
 Alle væsentlige ændringer i dette projekt dokumenteres i denne fil.
 
+## [v1.4.0] - 2026-05-13
+
+### Tilføjet
+- **Bidirektionel Google Sheets synkronisering** - Data kan nu både gemmes til og hentes fra Google Sheets
+- Ny "Hent data fra Google Sheets" knap til at indlæse data fra Sheets
+- Ny "Fuld synkronisering" knap til at køre komplet backup (hent + gem)
+- Automatisk indlæsning af data fra Google Sheets ved app-opstart (hvis konfigureret)
+- Komplet Google Apps Script eksempel fil (`google-apps-script-example.js`)
+- GET endpoint support i Google Apps Script for at hente data
+- Separat Google Sheets ark for hver datatype: Company, Customers, Tasks, Invoices, SyncLog
+
+### Ændret
+- Google Sheets integration opgraderet fra envejs (kun POST) til tovejs (GET + POST)
+- Opdateret README med omfattende Google Sheets dokumentation
+- Opdateret UI tekst fra "skriver JSON" til "læser og skriver JSON"
+
+### Forbedret
+- Bedre datapersistence med fuld backup til cloud
+- Mulighed for at gendanne data fra Google Sheets
+- Synkroniseringslog i Google Sheets for at spore alle ændringer
+
 ## [v1.3.0] - 2026-05-13
 
 ### Tilføjet

@@ -150,7 +150,7 @@
 
         <section class="card" id="syncSection">
           <h2>Google Sheets opsætning</h2>
-          <p>Brug en Google Apps Script Web App URL, som skriver JSON til dit ark.</p>
+          <p>Brug en Google Apps Script Web App URL, som læser og skriver JSON til dit ark.</p>
           <form id="syncForm" class="settings-form">
             <label>Apps Script URL <input id="sheetUrl" placeholder="https://script.google.com/..." /></label>
             <label>
@@ -162,6 +162,10 @@
               <button id="testSyncBtn" type="button">Test adgang</button>
             </div>
           </form>
+          <div class="header-actions" style="margin-top: 12px;">
+            <button id="loadFromSheetBtn" type="button">Hent data fra Google Sheets</button>
+            <button id="fullSyncBtn" type="button">Fuld synkronisering</button>
+          </div>
           <p id="syncStatus"></p>
         </section>
 
