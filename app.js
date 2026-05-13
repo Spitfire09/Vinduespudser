@@ -127,7 +127,7 @@ function renderRouteView() {
       const items = byDate[date]
         .map((t) => {
           const c = state.customers.find((x) => x.id === t.customerId);
-          const address = c?.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c?.address || "");
+          const address = (c?.street && c?.postalCode && c?.city) ? `${c.street}, ${c.postalCode} ${c.city}` : (c?.address || "");
           return `<div class="small">• <strong>${c?.name || "Ukendt"}</strong> – ${address} (${t.title})</div>`;
         })
         .join("");
@@ -197,7 +197,7 @@ function renderCustomers() {
   list.innerHTML = "";
   for (const c of state.customers) {
     const li = document.createElement("li");
-    const address = c.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "");
+    const address = (c.street && c.postalCode && c.city) ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "");
     li.innerHTML = `<strong>${c.name}</strong><div class="small">${address} · ${c.phone || "-"} · ${c.email || "-"}</div>`;
     list.appendChild(li);
   }
@@ -591,7 +591,7 @@ function renderAllCustomersList() {
   const tbody = document.createElement("tbody");
   for (const c of state.customers) {
     const tr = document.createElement("tr");
-    const address = c.street ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "-");
+    const address = (c.street && c.postalCode && c.city) ? `${c.street}, ${c.postalCode} ${c.city}` : (c.address || "-");
     tr.innerHTML = `
       <td style="padding: 8px; border-bottom: 1px solid #eee;"><strong>${c.name}</strong></td>
       <td style="padding: 8px; border-bottom: 1px solid #eee;">${address}</td>
