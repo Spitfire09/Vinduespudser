@@ -593,15 +593,32 @@ function downloadInvoicePdf(doc, invoiceNumber) {
 }
 
 function openInvoiceEmail(customer, invoiceNumber, amount, date) {
+  if (!customer.email) {
+    alert(`Kunde ${customer.name} har ingen email registreret.`);
+    return false;
+  }
+  
   const companyName = state.company.name || DEFAULT_COMPANY_NAME;
   const subject = encodeURIComponent(`Faktura ${invoiceNumber} – ${date}`);
   const body = encodeURIComponent(
     `Kære ${customer.name},\n\nVedhæftet finder du faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.\n\nMed venlig hilsen\n${companyName}`
   );
-  const mailto = `mailto:${customer.email || ""}?subject=${subject}&body=${body}`;
-  // Using window.location.href instead of window.open() for better mobile compatibility
-  // and to avoid popup blockers that might prevent the email client from opening
-  window.location.href = mailto;
+  const mailto = `mailto:${customer.email}?subject=${subject}&body=${body}`;
+  
+  // Use window.open with setTimeout to prevent interrupting downloads
+  // Falls back to creating a temporary link if popup is blocked
+  setTimeout(() => {
+    const opened = window.open(mailto, "_blank");
+    if (!opened || opened.closed || typeof opened.closed === "undefined") {
+      // Popup blocked or window.open failed, try using a link
+      const link = document.createElement("a");
+      link.href = mailto;
+      link.target = "_blank";
+      link.click();
+    }
+  }, 100);
+  
+  return true;
 }
 
 function renderInvoices() {
@@ -633,8 +650,6 @@ function renderInvoices() {
     emailBtn.textContent = "Send email";
     emailBtn.addEventListener("click", () => {
       if (!customer) return;
-      const doc = generateInvoicePdf(customer, inv.invoiceNumber, inv.description, inv.amount, inv.date);
-      downloadInvoicePdf(doc, inv.invoiceNumber);
       openInvoiceEmail(customer, inv.invoiceNumber, inv.amount, inv.date);
     });
 
@@ -853,8 +868,11 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   state.invoices.push(inv);
   saveState();
 
+  // Generate and download PDF first
   const doc = generateInvoicePdf(customer, invoiceNumber, inv.description, inv.amount, inv.date);
   downloadInvoicePdf(doc, invoiceNumber);
+  
+  // Open email client after a short delay to allow download to start
   openInvoiceEmail(customer, invoiceNumber, inv.amount, inv.date);
 
   e.target.reset();
