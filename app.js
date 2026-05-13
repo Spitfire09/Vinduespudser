@@ -2,6 +2,7 @@ const STORAGE_KEY = "vinduespudser-data-v1";
 const SYNC_QUEUE_KEY = "vinduespudser-sync-queue-v1";
 const DEFAULT_COMPANY_NAME = "Vinduespudser";
 const EMAIL_OPEN_DELAY_MS = 100; // Delay to prevent email opening from interrupting PDF download
+const FORM_SUBMIT_EMAIL_DELAY_MS = 200; // Longer delay for form submissions (form reset, state save, render updates)
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
 const updateBtn = document.getElementById("updateBtn");
@@ -594,7 +595,7 @@ function downloadInvoicePdf(doc, invoiceNumber) {
   doc.save(`faktura-${invoiceNumber}.pdf`);
 }
 
-function openInvoiceEmail(customer, invoiceNumber, amount, date) {
+function openInvoiceEmail(customer, invoiceNumber, amount, date, pdfDownloaded = false) {
   if (!customer.email) {
     alert(`Kunde ${customer.name} har ingen email registreret.`);
     return false;
@@ -602,9 +603,20 @@ function openInvoiceEmail(customer, invoiceNumber, amount, date) {
   
   const companyName = state.company.name || DEFAULT_COMPANY_NAME;
   const subject = encodeURIComponent(`Faktura ${invoiceNumber} – ${date}`);
-  const body = encodeURIComponent(
-    `Kære ${customer.name},\n\nVedhæftet finder du faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.\n\nMed venlig hilsen\n${companyName}`
-  );
+  const pdfFilename = `faktura-${invoiceNumber}.pdf`;
+  
+  // Build email body
+  const invoiceInfo = `Faktura ${invoiceNumber} af ${date} for ${formatAmount(amount)} kr.`;
+  
+  // Note: mailto links cannot attach files due to browser security.
+  // Include instructions to manually attach the downloaded PDF.
+  let bodyText = `Kære ${customer.name},\n\n`;
+  if (pdfDownloaded) {
+    bodyText += `Vedhæft venligst den downloadede fil "${pdfFilename}" til denne email.\n\n`;
+  }
+  bodyText += `${invoiceInfo}\n\nMed venlig hilsen\n${companyName}`;
+  
+  const body = encodeURIComponent(bodyText);
   const mailto = `mailto:${customer.email}?subject=${subject}&body=${body}`;
   
   // Use setTimeout to prevent interrupting downloads
@@ -664,7 +676,13 @@ function renderInvoices() {
     emailBtn.textContent = "Send email";
     emailBtn.addEventListener("click", () => {
       if (!customer) return;
-      openInvoiceEmail(customer, inv.invoiceNumber, inv.amount, inv.date);
+      // Generate and download PDF first, then open email after delay
+      const doc = generateInvoicePdf(customer, inv.invoiceNumber, inv.description, inv.amount, inv.date);
+      downloadInvoicePdf(doc, inv.invoiceNumber);
+      // Wait for download to complete before opening email
+      setTimeout(() => {
+        openInvoiceEmail(customer, inv.invoiceNumber, inv.amount, inv.date, true);
+      }, EMAIL_OPEN_DELAY_MS);
     });
 
     const del = document.createElement("button");
@@ -887,8 +905,11 @@ byId("invoiceForm").addEventListener("submit", (e) => {
   const doc = generateInvoicePdf(customer, invoiceNumber, inv.description, inv.amount, inv.date);
   downloadInvoicePdf(doc, invoiceNumber);
   
-  // Open email client after a short delay to allow download to start
-  openInvoiceEmail(customer, invoiceNumber, inv.amount, inv.date);
+  // Open email client after a delay to allow download to initiate
+  // Use longer delay for form submission to account for additional processing
+  setTimeout(() => {
+    openInvoiceEmail(customer, invoiceNumber, inv.amount, inv.date, true);
+  }, FORM_SUBMIT_EMAIL_DELAY_MS);
 
   e.target.reset();
   byId("invoiceDate").value = new Date().toISOString().slice(0, 10);
