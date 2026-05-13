@@ -2,6 +2,16 @@
 
 Alle væsentlige ændringer i dette projekt dokumenteres i denne fil.
 
+## [v1.4.1] - 2026-05-13
+
+### Rettet
+- **Faktura download og email-sending** - Rettet kritiske problemer med faktura funktionalitet
+  - Ændret mailto-håndtering fra `window.location.href` til `window.open()` for at undgå afbrydelse af PDF-download
+  - Tilføjet validering af kunde email før åbning af email-klient
+  - Fjernet redundant PDF-download når "Send email" knappes trykkes i faktura historik
+  - Tilføjet forsinkelse mellem PDF-download og email-åbning for at forhindre konflikter
+  - Email åbner nu korrekt enhedens standard email-program uden at afbryde download
+
 ## [v1.4.0] - 2026-05-13
 
 ### Tilføjet
