@@ -605,12 +605,14 @@ function openInvoiceEmail(customer, invoiceNumber, amount, date) {
   );
   const mailto = `mailto:${customer.email}?subject=${subject}&body=${body}`;
   
-  // Use window.open with setTimeout to prevent interrupting downloads
-  // Falls back to creating a temporary link if popup is blocked
+  // Use setTimeout to prevent interrupting downloads
+  // Try window.open first, with link fallback for better compatibility
   setTimeout(() => {
-    const opened = window.open(mailto, "_blank");
-    if (!opened || opened.closed || typeof opened.closed === "undefined") {
-      // Popup blocked or window.open failed, try using a link
+    try {
+      // window.open may fail with mailto on some browsers/devices
+      window.open(mailto, "_blank");
+    } catch (err) {
+      // Fallback: create and click a link element
       const link = document.createElement("a");
       link.href = mailto;
       link.target = "_blank";
