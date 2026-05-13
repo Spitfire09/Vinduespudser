@@ -610,13 +610,24 @@ function openInvoiceEmail(customer, invoiceNumber, amount, date) {
   // Try window.open first, with link fallback for better compatibility
   setTimeout(() => {
     try {
-      // window.open may fail with mailto on some browsers/devices
-      window.open(mailto);
+      // window.open may return null if blocked by popup blocker
+      const result = window.open(mailto);
+      if (!result) {
+        // Popup blocked, use fallback
+        const link = document.createElement("a");
+        link.href = mailto;
+        link.click();
+      }
     } catch (err) {
-      // Fallback: create and click a link element
-      const link = document.createElement("a");
-      link.href = mailto;
-      link.click();
+      // Exception thrown, use fallback
+      try {
+        const link = document.createElement("a");
+        link.href = mailto;
+        link.click();
+      } catch (fallbackErr) {
+        console.error("Failed to open email client:", err, fallbackErr);
+        alert("Kunne ikke åbne email-klient. Kopiér venligst kunde email manuelt: " + customer.email);
+      }
     }
   }, EMAIL_OPEN_DELAY_MS);
   
