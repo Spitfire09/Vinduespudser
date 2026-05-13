@@ -4,6 +4,7 @@ const DEFAULT_COMPANY_NAME = "Vinduespudser";
 const EMAIL_OPEN_DELAY_MS = 100; // Delay to prevent email opening from interrupting PDF download
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
+const updateBtn = document.getElementById("updateBtn");
 const syncStatus = document.getElementById("syncStatus");
 
 let deferredPrompt;
@@ -728,6 +729,7 @@ function renderVersionHistory() {
   
   // Version entries are now managed directly here, not stored in state
   const versionEntries = [
+    { version: "v1.5.0", date: "2026-05-13", description: "Tilføjet 'Opdater' knap til at tvinge cache refresh og hente ny version på Android" },
     { version: "v1.4.0", date: "2026-05-13", description: "Tilføjet bidirektionel Google Sheets synkronisering (hent + gem data)" },
     { version: "v1.3.0", date: "2026-05-13", description: "Tilføjet Kunder-fane, opdelt kundeadresse i vej/postnr/by, og versionshistorik" },
     { version: "v1.2.0", date: "2026-05-12", description: "Forbedret fakturafunktionalitet og email-integration" },
@@ -1013,6 +1015,51 @@ installBtn.addEventListener("click", async () => {
   await deferredPrompt.userChoice;
   deferredPrompt = null;
   installBtn.hidden = true;
+});
+
+updateBtn.addEventListener("click", async () => {
+  updateBtn.textContent = "🔄 Tjekker...";
+  updateBtn.disabled = true;
+  
+  try {
+    if ("serviceWorker" in navigator) {
+      // Get the current service worker registration
+      const registration = await navigator.serviceWorker.getRegistration();
+      
+      if (registration) {
+        // Force check for updates
+        await registration.update();
+        
+        // If there's a waiting service worker, activate it immediately
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: "SKIP_WAITING" });
+          
+          // Wait for the new service worker to take control
+          navigator.serviceWorker.addEventListener("controllerchange", () => {
+            window.location.reload();
+          });
+        } else {
+          // No update available, just clear cache and reload
+          if ("caches" in window) {
+            const cacheNames = await caches.keys();
+            await Promise.all(cacheNames.map(name => caches.delete(name)));
+          }
+          window.location.reload();
+        }
+      } else {
+        // No service worker registered, just reload
+        window.location.reload();
+      }
+    } else {
+      // No service worker support, just reload
+      window.location.reload();
+    }
+  } catch (error) {
+    console.error("Update check failed:", error);
+    updateBtn.textContent = "🔄 Opdater";
+    updateBtn.disabled = false;
+    alert("Kunne ikke tjekke for opdateringer. Prøv at genindlæse siden manuelt.");
+  }
 });
 
 if ("serviceWorker" in navigator) {
