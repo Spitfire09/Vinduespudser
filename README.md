@@ -6,7 +6,8 @@ En personlig, installérbar PWA til at håndtere kunder, opgaver/ordrer og planl
 
 - Login/profil (navn, email)
 - Dashboard med nøgletal
-- Kundeliste + oprettelse
+- **Kunder-fane** – komplet kundeliste i tabelformat
+- Kundeliste + oprettelse med separate felter for vej, postnummer og by
 - Opgaveliste med statusflow (ny/igang/færdig)
 - **Gentagende opgaver** – sæt interval (ugentlig/månedlig/kvartalsvis); næste opgave oprettes automatisk, når en markeres færdig
 - **Faktura fra opgave** – knappen "Lav faktura" på færdige opgaver forudfylder faktura-formularen
@@ -15,6 +16,7 @@ En personlig, installérbar PWA til at håndtere kunder, opgaver/ordrer og planl
 - Søgning, filtrering og sortering
 - Simpel kalenderoversigt pr. dato
 - CSV-eksport af opgaver
+- **Versionshistorik** – viser de seneste versioner med tidsstempel på Opsætning-fanen
 - Offline support med Service Worker
 - Lokal sync-kø og manuel/automatisk sync
 - Google Sheets integration via Apps Script endpoint
@@ -36,6 +38,16 @@ npm run build
 ```
 
 Build output lægges i `dist/` og cache-navnet i service worker opdateres for hver build.
+
+## Versionshistorik
+
+Versionshistorik vedligeholdes i `CHANGELOG.md` filen. Ved hver væsentlig ændring:
+
+1. Opdater `CHANGELOG.md` med en ny version, dato og beskrivelse
+2. Opdater `versionHistory` arrayet i `app.js` renderVersionHistory() funktionen hvis nødvendigt
+3. Commit med en beskrivende commit-besked
+
+Versionshistorikken vises automatisk på Opsætning-fanen i applikationen.
 
 ## Google Sheets (Apps Script)
 
