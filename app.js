@@ -1,6 +1,7 @@
 const STORAGE_KEY = "vinduespudser-data-v1";
 const SYNC_QUEUE_KEY = "vinduespudser-sync-queue-v1";
 const DEFAULT_COMPANY_NAME = "Vinduespudser";
+const EMAIL_OPEN_DELAY_MS = 100; // Delay to prevent email opening from interrupting PDF download
 const installBtn = document.getElementById("installBtn");
 const notifyBtn = document.getElementById("notifyBtn");
 const syncStatus = document.getElementById("syncStatus");
@@ -618,7 +619,7 @@ function openInvoiceEmail(customer, invoiceNumber, amount, date) {
       link.target = "_blank";
       link.click();
     }
-  }, 100);
+  }, EMAIL_OPEN_DELAY_MS);
   
   return true;
 }
