@@ -611,12 +611,11 @@ function openInvoiceEmail(customer, invoiceNumber, amount, date) {
   setTimeout(() => {
     try {
       // window.open may fail with mailto on some browsers/devices
-      window.open(mailto, "_blank");
+      window.open(mailto);
     } catch (err) {
       // Fallback: create and click a link element
       const link = document.createElement("a");
       link.href = mailto;
-      link.target = "_blank";
       link.click();
     }
   }, EMAIL_OPEN_DELAY_MS);
