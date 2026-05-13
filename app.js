@@ -22,7 +22,6 @@ const defaultState = {
   invoices: [],
   invoiceCounter: 1,
   settings: { sheetUrl: "", sheetToken: "" },
-  versionHistory: []
 };
 
 const state = loadState();
@@ -609,7 +608,7 @@ function renderVersionHistory() {
   const container = byId("versionHistory");
   if (!container) return;
   
-  // Display hardcoded version history
+  // Version entries are now managed directly here, not stored in state
   const versionEntries = [
     { version: "v1.3.0", date: "2026-05-13", description: "Tilføjet Kunder-fane, opdelt kundeadresse i vej/postnr/by, og versionshistorik" },
     { version: "v1.2.0", date: "2026-05-12", description: "Forbedret fakturafunktionalitet og email-integration" },
@@ -617,17 +616,12 @@ function renderVersionHistory() {
     { version: "v1.0.0", date: "2026-05-08", description: "Initial version med Dashboard, Fakturaer og Opsætning" }
   ];
   
-  if (!state.versionHistory || state.versionHistory.length === 0) {
-    state.versionHistory = versionEntries;
-    saveState();
-  }
-  
   container.innerHTML = "";
   const list = document.createElement("ul");
   list.style.listStyle = "none";
   list.style.padding = "0";
   
-  const entries = state.versionHistory.slice(0, 5);
+  const entries = versionEntries.slice(0, 5);
   for (const entry of entries) {
     const li = document.createElement("li");
     li.style.marginBottom = "12px";

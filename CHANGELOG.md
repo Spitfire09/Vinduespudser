@@ -8,7 +8,7 @@ Alle væsentlige ændringer i dette projekt dokumenteres i denne fil.
 - Ny "Kunder" fane med komplet kundeliste i tabelformat
 - Kundeadresse opdelt i separate felter: Vej, Postnummer og By
 - Versionshistorik sektion på Opsætning-fanen
-- Visning af de 5 seneste commits med tidsstempel
+- Visning af de 5 seneste versioner med tidsstempel
 
 ### Ændret
 - Kundeformular opdateret til at bruge tre separate adressefelter
